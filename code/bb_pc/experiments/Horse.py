@@ -1,6 +1,3 @@
-doc = """
-Code for ECCV 2020 Submission "Best Buddies Registration for Point Clouds"
-"""
 import open3d as o3d
 import numpy as np
 import os
@@ -30,11 +27,16 @@ def create_subsets_with_normals(full_PC, num_samples):
 
 def optimize(mode, A, B, A_normals, B_normals):
     config = {}
-    config['BBS'] = {
+
+    config['BBR-softBBS'] = {
         'loss_type': 'BBS',
         'distance_measure': 'point2point',
+        'nIterations': 750,
+        'alpha_lr': 5e-6,
+        'angles_lr': 5e-3,
+        'trans_lr': 1e-5,
     }
-    config['BD'] = {
+    config['BBR-softBD'] = {
         'loss_type': 'BD',
         'distance_measure': 'point2point',
         'nIterations': 750,
@@ -42,7 +44,7 @@ def optimize(mode, A, B, A_normals, B_normals):
         'angles_lr': 5e-3,
         'trans_lr': 1e-5,
     }
-    config['BDN'] = {
+    config['BBR-N'] = {
         'loss_type': 'BD',
         'distance_measure': 'point2plane',
         'nIterations': 1000,
@@ -53,26 +55,14 @@ def optimize(mode, A, B, A_normals, B_normals):
         'LR_factor': 1e-1
     }
 
-    if mode == 'BDN':
-        config['BDN']['A_normals'] = A_normals
-        config['BDN']['B_normals'] = B_normals
+    if mode == 'BBR-F':
+        print("BBR-F currently not implemented")
+        return None
 
-    if mode == 'BBR':
-        res_motion = []
-        _, res_motion_BBS, _, _ = \
-            optimize_neural_network(A, B, **config['BBS'])
-        res_motion.append(['BBS', res_motion_BBS])
 
-        _, res_motion_BD, _, _ = \
-            optimize_neural_network(A, B, **config['BD'],
-                            init_trans=res_motion_BBS['trans'],
-                            init_angles=res_motion_BBS['angles'])
-        res_motion.append(['BD', res_motion_BD])
-
-    else:
-        _, res_motion_raw, _, _ = \
-            optimize_neural_network(A, B, **config[mode])
-        res_motion = [[mode, res_motion_raw]]
+    _, res_motion_raw, _, _ = \
+        optimize_neural_network(A, B, A_normals, B_normals, **config[mode])
+    res_motion = [[mode, res_motion_raw]]
 
     return res_motion
 
@@ -104,7 +94,7 @@ def main():
     GT_motion = {'angles': gt_angle.flatten(), 'trans': trans.flatten()}
     A_normals_rotated = np.matmul(A_normals, R)
 
-    for mode in ['BBR', 'BD', 'BDN']:
+    for mode in ['BBR-softBBS', 'BBR-softBD', 'BBR-N', 'BBR-F']:
         print("\n\n================= Running in mode: %s =================" % mode)
         estimated_motions = optimize(mode, PC_A_rotated_translated, PC_B, A_normals_rotated, B_normals)
         for mot in estimated_motions:
@@ -112,6 +102,8 @@ def main():
             if len(estimated_motions) > 1:
                 print('\n' + cur_mode + ':\n---')
             print_GT_vs_result(GT_motion, mot[1])
+
+    print("\n\n========= Finished Successfully ========")
 
 if __name__ == "__main__":
     main()

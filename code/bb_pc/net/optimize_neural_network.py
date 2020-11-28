@@ -77,7 +77,7 @@ def optimize_neural_network(A, B,
                                                                               optimizer, \
                                                                               loss_np, angles_np, alpha_np, \
                                                                               order, trans_np)
-        scheduler.step(epoch)
+        scheduler.step()
         MIN_ALPHA = 1e-8
         alpha.data = alpha.data.clamp(MIN_ALPHA)
 

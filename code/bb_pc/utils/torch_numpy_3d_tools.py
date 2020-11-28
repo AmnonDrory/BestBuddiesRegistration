@@ -1,5 +1,5 @@
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
+#from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import math
 import open3d as o3d
@@ -238,8 +238,8 @@ def plot_3d(coords, figure=1, show=True, fig=None):
         N = coords.shape[0]
     if fig is None:
         fig = plt.figure()
-    n = 1
-    ax = fig.add_subplot(111,projection='3d')
+
+    ax = fig.add_subplot(111,projection='3d') # must uncomment import from mpl_toolkits for this to run correctly
     for n in range(N):
         x = coords[n, 0, :]
         y = coords[n, 1, :]
@@ -336,7 +336,7 @@ def plot_A_B_new(A,B, ax=None, show=True, colors=None):
         B = B.T
     if ax is None:
         fig = plt.figure()
-        ax = fig.add_subplot(111,projection='3d')
+        ax = fig.add_subplot(111,projection='3d') # must uncomment import from mpl_toolkits for this to run correctly
     if colors is None:
         for i in range(A.shape[1]):
             c = np.random.rand(3,)

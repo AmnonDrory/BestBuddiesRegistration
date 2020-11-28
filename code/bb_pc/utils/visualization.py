@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 # This import registers the 3D projection, but is otherwise unused.
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
+# from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
 def draw_registration_result(A,B,title=None):
     if title is None:
@@ -22,7 +22,7 @@ def draw_registration_result(A,B,title=None):
 
 def DisplayPoints(A, B=None, A_emphasis=None, B_emphasis=None):
     fig = plt.gcf()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection='3d') # must uncomment import from mpl_toolkits for this to run correctly
     #ax.set_aspect('equal')
 
     display_with_emphasis(A, A_emphasis, ax, [0, 0, 1])
