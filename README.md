@@ -1,4 +1,4 @@
-Code for the paper "Best Buddies Registration for Point Clouds"
+Code for the paper "Best Buddies Registration for Point Clouds" by Amnon Drory, Tal Shomer, Shai Avidan and Raja Giryes from Tel-Aviv University. 
 
 This code runs an experiment using the Horse point cloud (taken from https://www.cc.gatech.edu/projects/large_models/)
 
