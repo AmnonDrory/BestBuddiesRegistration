@@ -88,9 +88,9 @@ def print_GT_vs_result(gt, result, file=None):
         print_GT(remaining, motion_only=True, file=f, fileonly=True)
 
     angular_error = calc_angular_error(gt['angles'],result['angles'])
-    print('Angular Error: %.4f' % angular_error)
+    print('Angular Error: %.4g' % angular_error)
     translation_error = calc_translational_error(gt,result)
-    print('Translation Error: %.4f' % translation_error)
+    print('Translation Error: %.4g' % translation_error)
 
     return remaining
 

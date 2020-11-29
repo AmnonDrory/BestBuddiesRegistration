@@ -9,9 +9,12 @@ if len(sys.argv) > 1:
 from ..net.optimize_neural_network import optimize_neural_network
 from ..general.TicToc import *
 from ..general.bb_pc_path import bb_pc_path
-from ..utils.data_tools import import_ply, calc_normals
+from ..utils.data_tools import import_ply
+from ..utils.normals import calc_normals
 from ..utils.torch_numpy_3d_tools import rotate_around_random_axis, random_unit_vector
 from ..utils.GT_utils import print_GT_vs_result, invert_motion
+from ..utils.tools_3d import apply_rot_trans
+from ..utils.visualization import draw_registration_result
 
 np.set_printoptions(precision=3, floatmode='maxprec', suppress=True, linewidth=200, threshold=10**6)
 
@@ -54,15 +57,15 @@ def optimize(mode, A, B, A_normals, B_normals):
         'LR_step_size': 500,
         'LR_factor': 1e-1
     }
+    config['BBR-F'] = {
+        'BBR_F': True,
+        'nIterations': 750,
+        'angles_lr': 5e-3,
+        'trans_lr': 1e-5
+    }
 
-    if mode == 'BBR-F':
-        print("BBR-F currently not implemented")
-        return None
-
-
-    _, res_motion_raw, _, _ = \
+    _, res_motion, _, _ = \
         optimize_neural_network(A, B, A_normals, B_normals, **config[mode])
-    res_motion = [[mode, res_motion_raw]]
 
     return res_motion
 
@@ -74,16 +77,16 @@ def main():
     Use Best Buddies Registration to find the rotation and translation that best
     aligns the two subsets.
     Compare results of algorithm to ground truth motion and meaure error.
-    Uses three varieties of Best Buddies Registration:
-    1. BBR: Optimize with Best Buddies Similarity (BBS) loss, then refine
-            with the Buddy-Distance (BD) loss.
-    2. BD:  Optimize with the Buddy-Distance loss
-    3. BDN: Optimize with the BD loss, using the point-to-plane distance
-            measure, ehich makes use of normals.
+    Uses four varieties of Best Buddies Registration:
+    1. BBR-softBBS
+    2. BBR-softBD
+    3. BBR-N
+    4. BBR-F
     """
     ANGLE = 10 # degrees
     OFFSET = 0.005 # METERS
     NUM_SAMPLES = 500
+    VISUALIZE = False
 
     full_PC = import_ply(bb_pc_path['horse_points_file'])
     PC_A, PC_B, A_normals, B_normals = create_subsets_with_normals(full_PC, NUM_SAMPLES)
@@ -94,14 +97,17 @@ def main():
     GT_motion = {'angles': gt_angle.flatten(), 'trans': trans.flatten()}
     A_normals_rotated = np.matmul(A_normals, R)
 
+    if VISUALIZE:
+        draw_registration_result(PC_A_rotated_translated, PC_B, "before")
+
     for mode in ['BBR-softBBS', 'BBR-softBD', 'BBR-N', 'BBR-F']:
         print("\n\n================= Running in mode: %s =================" % mode)
-        estimated_motions = optimize(mode, PC_A_rotated_translated, PC_B, A_normals_rotated, B_normals)
-        for mot in estimated_motions:
-            cur_mode = mot[0]
-            if len(estimated_motions) > 1:
-                print('\n' + cur_mode + ':\n---')
-            print_GT_vs_result(GT_motion, mot[1])
+        estimated_motion = optimize(mode, PC_A_rotated_translated, PC_B, A_normals_rotated, B_normals)
+        print_GT_vs_result(GT_motion, estimated_motion)
+
+        if VISUALIZE:
+            B_res = apply_rot_trans(PC_B, estimated_motion['angles'], estimated_motion['trans'])
+            draw_registration_result(PC_A_rotated_translated, B_res, "after %s" % mode)
 
     print("\n\n========= Finished Successfully ========")
 

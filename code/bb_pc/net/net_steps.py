@@ -23,7 +23,7 @@ def record_in_logs(angles_np,trans_np,alpha_np,theta, phi, psi, trans_x, trans_y
     
     return angles_np,trans_np,alpha_np,
 
-def gd_step(train, label, train_normals, label_normals, batch_size, loss_type, distance_measure, \
+def gd_step(train, label, train_normals, label_normals, loss_type, distance_measure, \
             theta, phi, psi, alpha, \
             trans_x, trans_y, trans_z, \
             optimizer, \

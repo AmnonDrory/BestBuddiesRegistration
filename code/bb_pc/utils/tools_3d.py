@@ -82,11 +82,11 @@ def rotate_3d(X, R):
 
 def euler_angles_to_rotation_matrix_torch(theta, phi, psi):
     if torch.cuda.is_available():
-        one = Variable(torch.ones(1)).cuda()
-        zero = Variable(torch.zeros(1)).cuda()
+        one = Variable(torch.ones(1, dtype=theta.dtype)).cuda()
+        zero = Variable(torch.zeros(1, dtype=theta.dtype)).cuda()
     else:
-        one = Variable(torch.ones(1))
-        zero = Variable(torch.zeros(1))
+        one = Variable(torch.ones(1, dtype=theta.dtype))
+        zero = Variable(torch.zeros(1, dtype=theta.dtype))
     rot_x = torch.cat((
         torch.unsqueeze(torch.cat((one, zero, zero), 0), dim=1),
         torch.unsqueeze(torch.cat((zero, theta.cos(), theta.sin()), 0), dim=1),

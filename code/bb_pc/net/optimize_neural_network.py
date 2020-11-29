@@ -1,8 +1,9 @@
 import torch
 import numpy as np
 from ..net.define_vars import define_input_PCs, get_device, define_weights, define_optimizer
-from ..net.net_steps import gd_step, sgd_step
+from ..net.net_steps import gd_step
 from ..net.utils import finalize, step_debug_prints, initialize_vars
+from ..net.BBR_F import BBR_F_step
 
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
@@ -13,6 +14,7 @@ def optimize_neural_network(A, B,
                             B_normals=None,
                             loss_type='BBS', # 'BBS' or 'BD'
                             distance_measure='point2point', # 'point2point' or 'point2plane'
+                            BBR_F=False,
                             init_alpha=1e-2,
                             nIterations=300,
                             angles_lr=5e-2,
@@ -21,8 +23,6 @@ def optimize_neural_network(A, B,
                             LR_step_size = 1000,
                             LR_factor = 1.0,
                             order = 'first',
-                            use_batches = False,
-                            batch_size = 1000,
                             trainable = None,
                             init_trans = None,
                             init_angles = None,
@@ -39,6 +39,11 @@ def optimize_neural_network(A, B,
         trainable = {"trans_x": True, "trans_y": True, "trans_z": True, "theta": True, "phi": True, "psi": True, "alpha": True}
 
     train, label, train_normals, label_normals = define_input_PCs(B, A, B_normals, A_normals)
+    if BBR_F:
+        torch_A = label.t()
+        torch_B = train.t()
+        torch_A_normals = label_normals.t()
+        torch_B_normals = train_normals.t()
 
     device, DEBUG = get_device()
     print("device=" + str(device))
@@ -60,18 +65,17 @@ def optimize_neural_network(A, B,
 
         epoch+=1
 
-        if use_batches:
-
-            loss, optimizer, loss_np, angles_np, alpha_np, trans_np = sgd_step(train, label, batch_size, loss_type, \
-                                                                               theta, phi, psi, alpha, \
-                                                                               trans_x, trans_y, trans_z, \
-                                                                               optimizer, \
-                                                                               loss_np, angles_np, alpha_np,
-                                                                               trans_np,
-                                                                               feature_mode)
+        if BBR_F:
+            loss, optimizer, loss_np, angles_np, alpha_np, trans_np = BBR_F_step(A, B, torch_A, torch_B,
+                                                        torch_A_normals, torch_B_normals,
+                                                        theta, phi, psi, alpha, \
+                                                        trans_x, trans_y, trans_z, \
+                                                        optimizer, \
+                                                        angles_np, alpha_np, trans_np, loss_np)
+																
         else:
 
-            loss, optimizer, loss_np, angles_np, alpha_np, trans_np = gd_step(train, label, train_normals, label_normals, batch_size, loss_type, distance_measure, \
+            loss, optimizer, loss_np, angles_np, alpha_np, trans_np = gd_step(train, label, train_normals, label_normals, loss_type, distance_measure, \
                                                                               theta, phi, psi, alpha, \
                                                                               trans_x, trans_y, trans_z, \
                                                                               optimizer, \
